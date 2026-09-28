@@ -5,8 +5,9 @@ using System.Linq;
 using Aerial;
 using System.Diagnostics;
 using System.Collections.Generic;
-using System.Net;
-using System.Web.Script.Serialization;
+using System.Net.Http;
+using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace ScreenSaver
 {
@@ -202,13 +203,13 @@ namespace ScreenSaver
 
         private void lblVersion_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            ProcessStartInfo sInfo = new ProcessStartInfo(getLatestReleaseURI());
+            ProcessStartInfo sInfo = new ProcessStartInfo(getLatestReleaseURI()) { UseShellExecute = true };
             Process.Start(sInfo);
         }
 
         private void btnOpenCache_Click(object sender, EventArgs e)
         {
-            Process.Start(Caching.CacheFolder);
+            Process.Start(new ProcessStartInfo(Caching.CacheFolder) { UseShellExecute = true });
         }
 
         private void btnPurgeCache_Click(object sender, EventArgs e)
@@ -228,29 +229,20 @@ namespace ScreenSaver
 
         private string getLatestReleaseURI()
         {
-            string releaseData = "";
+            string githubURL = AerialGlobalVars.githubAllReleases; //URL for all releases
 
-            using (WebClient w = new WebClient())
+            try
             {
-                w.Headers.Add("User-Agent: Other");  //github will give a 403 if we don't define the user agent
-                try
+                var releaseData = Task.Run(() => Caching.Http.GetStringAsync(AerialGlobalVars.githubLatestReleaseDetails)).GetAwaiter().GetResult();
+                using (var doc = JsonDocument.Parse(releaseData))
                 {
-                    releaseData = w.DownloadString(AerialGlobalVars.githubLatestReleaseDetails);
-                } catch (WebException)
-                {
-                    //if we have an error reading the release data, just use the standard URL for all releases (AKA do nothing here)
+                    if (doc.RootElement.TryGetProperty("html_url", out var url))
+                        githubURL = url.GetString();
                 }
             }
-            var deserializedData = new JavaScriptSerializer().Deserialize<dynamic>(releaseData);
-
-            string githubURL = "";
-
-            if (String.IsNullOrEmpty(releaseData))
+            catch (Exception ex) when (ex is HttpRequestException || ex is TaskCanceledException || ex is JsonException)
             {
-                githubURL = AerialGlobalVars.githubAllReleases; //URL for all releases
-            } else
-            {
-                githubURL = deserializedData["html_url"];
+                //if we have an error reading the release data, just use the standard URL for all releases (AKA do nothing here)
             }
 
             return githubURL;
@@ -292,7 +284,7 @@ namespace ScreenSaver
                         Trace.WriteLine(movie.url + " is already cached");
                     }
                 }
-            } catch (WebException err)
+            } catch (HttpRequestException err)
             {
                 Trace.WriteLine("Error downloading all videos: " + err.ToString());
             }

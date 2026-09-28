@@ -1,8 +1,5 @@
 ﻿using ScreenSaver;
 using System;
-using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Windows.Forms;
 
 namespace Aerial
@@ -26,18 +23,7 @@ namespace Aerial
         [STAThread]
         static void Main(string[] args)
         {
-            AppDomain.CurrentDomain.AssemblyResolve += (sender, dll) =>
-            {
-                var resName = "Aerial.libs." + dll.Name.Split(',')[0] + ".dll";
-                var thisAssembly = Assembly.GetExecutingAssembly();
-                using (var input = thisAssembly.GetManifestResourceStream(resName))
-                {
-                    return input != null
-                         ? Assembly.Load(StreamToBytes(input))
-                         : null;
-                }
-            };
-
+            Application.SetHighDpiMode(HighDpiMode.SystemAware);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
@@ -103,25 +89,6 @@ namespace Aerial
                     Application.Run(new SettingsForm());
                 }
             }            
-        }
-
-        static byte[] StreamToBytes(Stream input)
-        {
-            var capacity = input.CanSeek ? (int)input.Length : 0;
-            using (var output = new MemoryStream(capacity))
-            {
-                int readLength;
-                var buffer = new byte[4096];
-
-                do
-                {
-                    readLength = input.Read(buffer, 0, buffer.Length);
-                    output.Write(buffer, 0, readLength);
-                }
-                while (readLength != 0);
-
-                return output.ToArray();
-            }
         }
 
         /// <summary>

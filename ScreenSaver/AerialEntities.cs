@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
+using System.Net.Http;
 using System.Text;
-using System.Web.Script.Serialization;
+using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace Aerial
 {
@@ -13,6 +14,7 @@ namespace Aerial
     {
         static IdAsset[] cachedEntities;
         static List<Asset> cachedPlaylist;
+        static readonly JsonSerializerOptions jsonOptions = new JsonSerializerOptions { IncludeFields = true };
 
         public static List<Asset> GetMovies()
         {
@@ -70,18 +72,23 @@ namespace Aerial
             Caching.StartDelayedCache(aerialUrl);
 
             string entries = "";
-            if (Caching.IsHit(aerialUrl)) {
-                entries = File.ReadAllText(Caching.Get(aerialUrl));
-            } else {
-                WebClient webClient = new WebClient();
-                entries = webClient.DownloadString(aerialUrl);
+            try
+            {
+                if (Caching.IsHit(aerialUrl))
+                    entries = File.ReadAllText(Caching.Get(aerialUrl));
+                else
+                    entries = DownloadString(aerialUrl);
+            }
+            catch (Exception e) when (e is HttpRequestException || e is IOException || e is TaskCanceledException || e is UriFormatException)
+            {
+                return null;
             }
 
             try
             {
-                cachedEntities = new JavaScriptSerializer().Deserialize<IdAsset[]>(entries);
+                cachedEntities = JsonSerializer.Deserialize<IdAsset[]>(entries, jsonOptions);
             }
-            catch (ArgumentException e)
+            catch (JsonException)
             {
                 //the passed in entities document is invalid.
                 return null;
@@ -89,6 +96,15 @@ namespace Aerial
 
 
             return cachedEntities;
+        }
+
+        private static string DownloadString(string url)
+        {
+            var uri = new Uri(url);
+            if (uri.IsFile)
+                return File.ReadAllText(uri.LocalPath);
+
+            return Task.Run(() => Caching.Http.GetStringAsync(uri)).GetAwaiter().GetResult();
         }
 
         /**
@@ -143,7 +159,6 @@ namespace Aerial
         public string id;// : "b1-1",
         public string timeOfDay;//" : "day"
 
-        [NonSerialized]
         internal int numeric = 0;
         
         public override string ToString()

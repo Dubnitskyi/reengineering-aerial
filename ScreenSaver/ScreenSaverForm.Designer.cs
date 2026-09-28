@@ -40,7 +40,6 @@
             this.player.Enabled = true;
             this.player.Location = new System.Drawing.Point(546, 22);
             this.player.Name = "player";
-            this.player.OcxState = ((System.Windows.Forms.AxHost.State)(resources.GetObject("player.OcxState")));
             this.player.Size = new System.Drawing.Size(345, 213);
             this.player.TabIndex = 1;
             // 

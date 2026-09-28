@@ -1,8 +1,7 @@
 ﻿using System.IO;
 using System;
-using System.ComponentModel;
 using System.Threading.Tasks;
-using System.Net;
+using System.Net.Http;
 using System.Diagnostics;
 using System.Threading;
 
@@ -15,6 +14,8 @@ namespace Aerial
 
         public static int DelayAmount = 1000 * 10; // 10 seconds.
         public static int NumOfCurrentDownloads = 0;
+
+        internal static readonly HttpClient Http = CreateHttpClient();
 
 
 
@@ -61,44 +62,67 @@ namespace Aerial
 
         internal static void StartDelayedCache(string url)
         {
+            if (!IsRemote(url)) return;
+
             if (EnsureEnoughSpace())
             {
-                Task.Delay(DelayAmount).ContinueWith(t =>
+                Task.Delay(DelayAmount).ContinueWith(async t =>
                 {
                     if (!IsCaching(url))
-                    {
-                        using (WebClient client = new WebClient())
-                        {
-                            client.DownloadFileCompleted += new AsyncCompletedEventHandler(OnDownloadFileComplete);
-                            string filename = Path.GetFileName(url);
-                            client.DownloadFileAsync(new Uri(url), Path.Combine(TempFolder, filename), filename);
-                            DownloadStart();
-                        }
-                    }
+                        await DownloadFile(url);
                 });
             }
         }
-        private static void OnDownloadFileComplete(object sender, AsyncCompletedEventArgs e)
+
+        private static async Task DownloadFile(string url)
         {
-            var filename = e.UserState.ToString();
+            string filename = Path.GetFileName(url);
             var tempFullPath = Path.Combine(TempFolder, filename);
             var cacheFullpath = Path.Combine(CacheFolder, filename);
-            if (e.Cancelled == false && e.Error == null)
+
+            DownloadStart();
+            try
             {
+                using (var response = await Http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead))
+                {
+                    response.EnsureSuccessStatusCode();
+                    using (var file = new FileStream(tempFullPath, FileMode.Create, FileAccess.Write, FileShare.None))
+                    {
+                        await response.Content.CopyToAsync(file);
+                    }
+                }
+
                 // delete if old file exists
                 if (File.Exists(cacheFullpath))
                     File.Delete(cacheFullpath);
 
-                Directory.Move(tempFullPath, cacheFullpath);
+                File.Move(tempFullPath, cacheFullpath);
             }
-            else
+            catch (Exception ex)
             {
-                // attempt to remove partially downloaded file
-                File.Delete(tempFullPath);
-            }
+                Trace.WriteLine("Error caching " + url + ": " + ex.Message);
 
-            DownloadEnd();
-            
+                // attempt to remove partially downloaded file
+                if (File.Exists(tempFullPath))
+                    File.Delete(tempFullPath);
+            }
+            finally
+            {
+                DownloadEnd();
+            }
+        }
+
+        private static bool IsRemote(string url)
+        {
+            return url != null && (url.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+                || url.StartsWith("https://", StringComparison.OrdinalIgnoreCase));
+        }
+
+        private static HttpClient CreateHttpClient()
+        {
+            var client = new HttpClient();
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("Aerial"); //github will give a 403 if we don't define the user agent
+            return client;
         }
 
         internal static async void UpdateCachePath(string oldCacheDirectory, string cacheLocation)

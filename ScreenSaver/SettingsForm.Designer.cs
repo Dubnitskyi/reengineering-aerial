@@ -181,7 +181,6 @@ namespace ScreenSaver
             this.player.Enabled = true;
             this.player.Location = new System.Drawing.Point(151, 19);
             this.player.Name = "player";
-            this.player.OcxState = ((System.Windows.Forms.AxHost.State)(resources.GetObject("player.OcxState")));
             this.player.Size = new System.Drawing.Size(232, 132);
             this.player.TabIndex = 16;
             // 
