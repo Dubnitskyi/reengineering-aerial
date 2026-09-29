@@ -14,9 +14,12 @@ namespace ScreenSaver
 {
     public partial class SettingsForm : Form
     {
+        private IVideoPlayer player;
+
         public SettingsForm()
         {
             InitializeComponent();
+            this.FormClosed += (s, e) => player?.Dispose();
             
             LoadSettings();
             
@@ -61,18 +64,16 @@ namespace ScreenSaver
 
             ShowSpace();
 
-            PopulateChosenVideoGroup();
-
             InitPlayer();
+
+            PopulateChosenVideoGroup();
         }
 
         private void InitPlayer()
         {
-            this.player.enableContextMenu = false;
-            this.player.settings.autoStart = true;
-            this.player.settings.enableErrorDialogs = true;
-            this.player.stretchToFit = true;
-            this.player.uiMode = "none";
+            player = PlayerFactory.Create();
+            player.View.Dock = DockStyle.Fill;
+            playerHost.Controls.Add(player.View);
         }
 
 
@@ -94,7 +95,7 @@ namespace ScreenSaver
             if (cbLivePreview.Checked && e.Node.FullPath.Contains("\\"))
             {
                 string url = tvChosen.GetUrl(e.Node.FullPath);
-                player.URL = Caching.TryHit(url);
+                player.Play(Caching.TryHit(url));
             }
         }
 

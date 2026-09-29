@@ -29,19 +29,9 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ScreenSaverForm));
-            this.player = new AxWMPLib.AxWindowsMediaPlayer();
             this.btnClose = new System.Windows.Forms.Button();
             this.btnSettings = new System.Windows.Forms.Button();
-            ((System.ComponentModel.ISupportInitialize)(this.player)).BeginInit();
             this.SuspendLayout();
-            // 
-            // player
-            // 
-            this.player.Enabled = true;
-            this.player.Location = new System.Drawing.Point(546, 22);
-            this.player.Name = "player";
-            this.player.Size = new System.Drawing.Size(345, 213);
-            this.player.TabIndex = 1;
             // 
             // btnClose
             // 
@@ -88,7 +78,6 @@
             this.ClientSize = new System.Drawing.Size(960, 540);
             this.Controls.Add(this.btnSettings);
             this.Controls.Add(this.btnClose);
-            this.Controls.Add(this.player);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "ScreenSaverForm";
@@ -96,13 +85,11 @@
             this.Text = "Aerial Screensaver";
             this.Load += new System.EventHandler(this.ScreenSaverForm_Load);
             this.Shown += new System.EventHandler(this.ScreenSaverForm_Shown);
-            ((System.ComponentModel.ISupportInitialize)(this.player)).EndInit();
             this.ResumeLayout(false);
 
         }
 
         #endregion
-        private AxWMPLib.AxWindowsMediaPlayer player;
         private System.Windows.Forms.Button btnClose;
         private System.Windows.Forms.Button btnSettings;
     }

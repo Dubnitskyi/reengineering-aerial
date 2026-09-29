@@ -39,7 +39,7 @@ namespace ScreenSaver
             this.grpChosenVideos = new System.Windows.Forms.GroupBox();
             this.tvChosen = new Aerial.Controls.EntitiesTreeView();
             this.cbLivePreview = new System.Windows.Forms.CheckBox();
-            this.player = new AxWMPLib.AxWindowsMediaPlayer();
+            this.playerHost = new System.Windows.Forms.Panel();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.chkUseTimeOfDay = new System.Windows.Forms.CheckBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
@@ -67,7 +67,6 @@ namespace ScreenSaver
             this.tabs.SuspendLayout();
             this.tabPreferences.SuspendLayout();
             this.grpChosenVideos.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.player)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.groupBox1.SuspendLayout();
             this.grpPlayer.SuspendLayout();
@@ -146,7 +145,7 @@ namespace ScreenSaver
             // 
             this.grpChosenVideos.Controls.Add(this.tvChosen);
             this.grpChosenVideos.Controls.Add(this.cbLivePreview);
-            this.grpChosenVideos.Controls.Add(this.player);
+            this.grpChosenVideos.Controls.Add(this.playerHost);
             this.grpChosenVideos.Controls.Add(this.pictureBox1);
             this.grpChosenVideos.Controls.Add(this.chkUseTimeOfDay);
             this.grpChosenVideos.Location = new System.Drawing.Point(7, 144);
@@ -180,13 +179,13 @@ namespace ScreenSaver
             this.cbLivePreview.Text = "Live Preview";
             this.cbLivePreview.UseVisualStyleBackColor = true;
             // 
-            // player
+            // playerHost
             // 
-            this.player.Enabled = true;
-            this.player.Location = new System.Drawing.Point(151, 19);
-            this.player.Name = "player";
-            this.player.Size = new System.Drawing.Size(232, 132);
-            this.player.TabIndex = 16;
+            this.playerHost.BackColor = System.Drawing.Color.Black;
+            this.playerHost.Location = new System.Drawing.Point(151, 19);
+            this.playerHost.Name = "playerHost";
+            this.playerHost.Size = new System.Drawing.Size(232, 132);
+            this.playerHost.TabIndex = 16;
             // 
             // pictureBox1
             // 
@@ -464,7 +463,6 @@ namespace ScreenSaver
             this.tabPreferences.ResumeLayout(false);
             this.grpChosenVideos.ResumeLayout(false);
             this.grpChosenVideos.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.player)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.groupBox1.ResumeLayout(false);
             this.grpPlayer.ResumeLayout(false);
@@ -499,7 +497,7 @@ namespace ScreenSaver
         private System.Windows.Forms.Label lblFreeSpace;
         private System.Windows.Forms.Button btnPurgeCache;
         private System.Windows.Forms.Label lblCacheSize;
-        private AxWMPLib.AxWindowsMediaPlayer player;
+        private System.Windows.Forms.Panel playerHost;
         private System.Windows.Forms.PictureBox pictureBox1;
         private System.Windows.Forms.CheckBox cbLivePreview;
         private System.Windows.Forms.Timer timerDiskUpdate;

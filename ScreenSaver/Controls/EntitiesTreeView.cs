@@ -58,7 +58,8 @@ namespace Aerial.Controls
         {
             SelectedNode = Nodes[0].Nodes[0];
             Select();
-            TopNode.EnsureVisible();
+            // TopNode is null until the tree handle exists
+            TopNode?.EnsureVisible();
             Nodes[0].EnsureVisible();
         }
 

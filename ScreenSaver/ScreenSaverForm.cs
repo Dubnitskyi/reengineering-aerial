@@ -1,10 +1,10 @@
 using Aerial;
+using Aerial.Players;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
-using System.Net;
 using System.IO;
 using System.Windows.Forms;
 using System.Linq;
@@ -14,10 +14,15 @@ namespace ScreenSaver
     public partial class ScreenSaverForm : Form
     {
         private int currentVideoIndex = 0;
+        private int failedVideos = 0;
+        private IVideoPlayer player;
         private DateTime lastInteraction = DateTime.Now;
         private Point mouseLocation = Point.Empty;
         private List<Asset> Movies;
         private Timer NextVideoTimer = new Timer();
+        private Timer InputTimer = new Timer();
+        private Point lastCursorPosition;
+        private HashSet<int> heldKeys = new HashSet<int>();
         private bool previewMode = false;
         private SettingsForm settingsFrm = null;
         private bool shouldCache = false;
@@ -27,6 +32,7 @@ namespace ScreenSaver
         public ScreenSaverForm()
         {
             InitializeComponent();
+            CreatePlayer();
 
 #if !DEBUG
             TopMost = true;
@@ -74,12 +80,22 @@ namespace ScreenSaver
             this.showVideo = showVideo;
         }
         
+        void CreatePlayer()
+        {
+            player = PlayerFactory.Create();
+            player.View.Location = new Point(0, 0);
+            player.View.Size = this.ClientSize;
+            this.Controls.Add(player.View);
+        }
+
         void RegisterEvents()
         {
-            this.player.MouseDownEvent += Player_MouseDownEvent;
-            this.player.KeyPressEvent += player_KeyPressEvent;
-            this.player.PlayStateChange += player_PlayStateChange;
-            this.player.MouseMoveEvent += player_MouseMoveEvent;
+            this.player.PlayerMouseDown += DoMouseDown;
+            this.player.PlayerKeyPress += ScreenSaverForm_KeyPress;
+            this.player.PlayerMouseMove += ScreenSaverForm_MouseMove;
+            this.player.MediaEnded += Player_MediaEnded;
+            this.player.MediaError += Player_MediaError;
+            this.FormClosed += (s, e) => player.Dispose();
 
             this.btnClose.Click += new EventHandler(this.btnClose_Click);
             this.btnClose.MouseMove += new MouseEventHandler(this.btnClose_MouseMove);
@@ -109,6 +125,16 @@ namespace ScreenSaver
             if (!previewMode && !windowMode) Cursor.Hide();
 
             LayoutPlayer();
+
+            if (!previewMode)
+            {
+                lastCursorPosition = Cursor.Position;
+                for (int vk = 1; vk < 0xFF; vk++)
+                    if (NativeMethods.IsKeyDown(vk)) heldKeys.Add(vk);
+                InputTimer.Tick += InputTimer_Tick;
+                InputTimer.Interval = 100;
+                InputTimer.Enabled = true;
+            }
             
             this.BackgroundImageLayout = ImageLayout.None;
 
@@ -165,20 +191,9 @@ namespace ScreenSaver
             else
                 ShouldExit();
         }
-        private void player_KeyPressEvent(object sender, AxWMPLib._WMPOCXEvents_KeyPressEvent e)
-        {
-            ScreenSaverForm_KeyPress(sender, new KeyPressEventArgs((char)e.nKeyAscii));
-        }
 #endregion
 
         #region Mouse events
-        
-        private void Player_MouseDownEvent(object sender, AxWMPLib._WMPOCXEvents_MouseDownEvent e)
-        {
-            Trace.WriteLine("Player_MouseDownEvent() e.nButton=" + e.nButton);
-            
-            DoMouseDown(null, new MouseEventArgs(e.nButton == 1 ? MouseButtons.Left : MouseButtons.Right, 0, e.fX, e.fY, 0));
-        }
         private void DoMouseDown(object sender, MouseEventArgs e)
         {
             Trace.WriteLine("ScreenSaverForm_MouseDown()");
@@ -204,12 +219,6 @@ namespace ScreenSaver
         private void ScreenSaverForm_MouseUp(object sender, MouseEventArgs e)
         {
             Trace.WriteLine("ScreenSaverForm_MouseUp()");
-        }
-        
-        private void player_MouseMoveEvent(object sender, AxWMPLib._WMPOCXEvents_MouseMoveEvent e)
-        {
-            Trace.WriteLine("player_MouseMoveEvent()");
-            ScreenSaverForm_MouseMove(sender, new MouseEventArgs(MouseButtons.None, 0, e.fX, e.fY, 0));
         }
         
         private void btnClose_MouseMove(object sender, MouseEventArgs e)
@@ -281,6 +290,58 @@ namespace ScreenSaver
 
         }
 
+        /// <summary>
+        /// LibVLC draws into its own native child window which runs on another thread and swallows
+        /// mouse and keyboard messages, so the input state is polled directly.
+        /// </summary>
+        private void InputTimer_Tick(object sender, EventArgs e)
+        {
+            var cursor = Cursor.Position;
+            bool moved = Math.Abs(cursor.X - lastCursorPosition.X) > 5 ||
+                         Math.Abs(cursor.Y - lastCursorPosition.Y) > 5;
+
+            if (!windowMode)
+            {
+                if (moved || NewKeyPressed())
+                    ShouldExit();
+            }
+            else if (Bounds.Contains(cursor))
+            {
+                if (moved)
+                {
+                    lastInteraction = DateTime.Now;
+                    ShowButtons();
+                }
+
+                if (player.Type == PlayerType.LibVlc && Form.ActiveForm == this && NativeMethods.IsKeyDown((int)Keys.LButton))
+                {
+                    var child = GetChildAtPoint(PointToClient(cursor));
+                    if (child != btnClose && child != btnSettings)
+                        NativeMethods.DragWindow(Handle);
+                }
+            }
+
+            lastCursorPosition = cursor;
+        }
+
+        /// <summary>
+        /// True if any key or mouse button went down after the screen saver started. 'N' switches video instead.
+        /// </summary>
+        private bool NewKeyPressed()
+        {
+            bool pressed = false;
+            for (int vk = 1; vk < 0xFF; vk++)
+            {
+                if (vk == (int)Keys.N) continue;
+
+                if (!NativeMethods.IsKeyDown(vk))
+                    heldKeys.Remove(vk);
+                else if (!heldKeys.Contains(vk))
+                    pressed = true;
+            }
+            return pressed;
+        }
+
         void ShowButtons(bool visibility = true)
         {
             btnClose.Visible = visibility;
@@ -337,11 +398,11 @@ namespace ScreenSaver
 
                 if (Caching.IsHit(url))
                 {
-                    player.URL = Caching.Get(url);
+                    player.Play(Caching.Get(url));
                 }
                 else
                 {
-                    player.URL = url;
+                    player.Play(url);
                     if (cacheEnabled && shouldCache && 
                         !previewMode &&  !Caching.IsCaching(url)) {
                         Caching.StartDelayedCache(url);
@@ -355,33 +416,31 @@ namespace ScreenSaver
 
         private void NextVideoTimer_Tick(object sender, EventArgs e)
         {
-            // Trace.WriteLine("Timer: " + state);
-            var state = this.player.playState;
-            if (state == WMPLib.WMPPlayState.wmppsReady ||
-                state == WMPLib.WMPPlayState.wmppsUndefined ||
-                state == WMPLib.WMPPlayState.wmppsStopped)
-            {
-                SetNextVideo();
-            }
             if (lastInteraction.AddSeconds(1) < DateTime.Now)
             {
                 ShowButtons(false);
             }
         }
 
-        private void player_PlayStateChange(object sender, AxWMPLib._WMPOCXEvents_PlayStateChangeEvent e)
+        private void Player_MediaEnded(object sender, EventArgs e)
         {
-            NativeMethods.EnableMonitorSleep();
+            failedVideos = 0;
+            SetNextVideo();
+        }
+
+        private void Player_MediaError(object sender, string url)
+        {
+            Trace.WriteLine("Player_MediaError() " + url);
+            failedVideos++;
+
+            // skip broken video, but don't spin forever if nothing can be played
+            if (Movies != null && failedVideos < Movies.Count)
+                SetNextVideo();
         }
 
         private void LayoutPlayer()
         {
-            this.player.enableContextMenu = false;
-            this.player.settings.autoStart = true;
-            this.player.settings.enableErrorDialogs = true;
-            this.player.stretchToFit = true;
-            this.player.uiMode = "none";
-            Application.AddMessageFilter(new IgnoreMouseClickMessageFilter(this, player));
+            Application.AddMessageFilter(new IgnoreMouseClickMessageFilter(this, player.View));
 
             ResizePlayer();
         }
@@ -391,9 +450,9 @@ namespace ScreenSaver
         /// </summary>
         private void ResizePlayer()
         {
-            this.player.Size = CalculateVideoFillSize(this.Size);
-            this.player.Top = (this.Size.Height / 2) - (this.player.Size.Height / 2);
-            this.player.Left =  (this.Size.Width / 2) - (this.player.Size.Width / 2);
+            this.player.View.Size = CalculateVideoFillSize(this.Size);
+            this.player.View.Top = (this.Size.Height / 2) - (this.player.View.Size.Height / 2);
+            this.player.View.Left =  (this.Size.Width / 2) - (this.player.View.Size.Width / 2);
         }
 
         /// <summary>

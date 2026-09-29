@@ -31,6 +31,17 @@ namespace Aerial
 
         [DllImport("user32.dll")]
         internal static extern bool GetClientRect(IntPtr hWnd, out Rectangle lpRect);
+
+        [DllImport("user32.dll")]
+        internal static extern short GetAsyncKeyState(int vKey);
+
+        /// <summary>
+        /// Physical key or mouse button state, works even when input goes to a window of another thread.
+        /// </summary>
+        internal static bool IsKeyDown(int vKey)
+        {
+            return (GetAsyncKeyState(vKey) & 0x8000) != 0;
+        }
         
         [DllImportAttribute("user32.dll")]
         public static extern int SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
