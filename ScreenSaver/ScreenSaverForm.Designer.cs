@@ -31,6 +31,7 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ScreenSaverForm));
             this.btnClose = new System.Windows.Forms.Button();
             this.btnSettings = new System.Windows.Forms.Button();
+            this.btnAdjust = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btnClose
@@ -69,6 +70,24 @@
             this.btnSettings.UseVisualStyleBackColor = false;
             this.btnSettings.Visible = false;
             // 
+            // btnAdjust
+            // 
+            this.btnAdjust.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnAdjust.BackColor = System.Drawing.Color.Black;
+            this.btnAdjust.FlatAppearance.BorderSize = 0;
+            this.btnAdjust.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnAdjust.Font = new System.Drawing.Font("Tahoma", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnAdjust.ForeColor = System.Drawing.Color.White;
+            this.btnAdjust.Location = new System.Drawing.Point(878, 10);
+            this.btnAdjust.Margin = new System.Windows.Forms.Padding(2);
+            this.btnAdjust.Name = "btnAdjust";
+            this.btnAdjust.Padding = new System.Windows.Forms.Padding(2, 0, 0, 0);
+            this.btnAdjust.Size = new System.Drawing.Size(22, 24);
+            this.btnAdjust.TabIndex = 4;
+            this.btnAdjust.Text = "◐";
+            this.btnAdjust.UseVisualStyleBackColor = false;
+            this.btnAdjust.Visible = false;
+            // 
             // ScreenSaverForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -76,6 +95,7 @@
             this.BackColor = System.Drawing.Color.Black;
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
             this.ClientSize = new System.Drawing.Size(960, 540);
+            this.Controls.Add(this.btnAdjust);
             this.Controls.Add(this.btnSettings);
             this.Controls.Add(this.btnClose);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
@@ -92,6 +112,7 @@
         #endregion
         private System.Windows.Forms.Button btnClose;
         private System.Windows.Forms.Button btnSettings;
+        private System.Windows.Forms.Button btnAdjust;
     }
 }
 

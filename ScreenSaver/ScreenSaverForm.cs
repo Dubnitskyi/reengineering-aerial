@@ -101,6 +101,8 @@ namespace ScreenSaver
             this.btnClose.MouseMove += new MouseEventHandler(this.btnClose_MouseMove);
             this.btnSettings.Click += new EventHandler(this.btnSettings_Click);
             this.btnSettings.MouseMove += new MouseEventHandler(this.btnClose_MouseMove);
+            this.btnAdjust.Click += new EventHandler(this.btnAdjust_Click);
+            this.btnAdjust.MouseMove += new MouseEventHandler(this.btnClose_MouseMove);
 
             this.KeyPress += new KeyPressEventHandler(this.ScreenSaverForm_KeyPress);
             this.MouseDown += DoMouseDown;
@@ -249,6 +251,19 @@ namespace ScreenSaver
             }
         }
 
+        private void btnAdjust_Click(object sender, EventArgs e)
+        {
+            Trace.WriteLine("btnAdjust_Click()");
+            var vlcPlayer = player as LibVlcPlayer;
+            if (vlcPlayer == null) return;
+
+            using (var adjustFrm = new VideoAdjustForm(vlcPlayer))
+            {
+                adjustFrm.Location = new Point(Right - adjustFrm.Width - 10, Top + 40);
+                adjustFrm.ShowDialog(this);
+            }
+        }
+
         private void ScreenSaverForm_MouseMove(object sender, MouseEventArgs e)
         {
             Trace.WriteLine("ScreenSaverForm_MouseMove()");
@@ -316,7 +331,7 @@ namespace ScreenSaver
                 if (player.Type == PlayerType.LibVlc && Form.ActiveForm == this && NativeMethods.IsKeyDown((int)Keys.LButton))
                 {
                     var child = GetChildAtPoint(PointToClient(cursor));
-                    if (child != btnClose && child != btnSettings)
+                    if (child != btnClose && child != btnSettings && child != btnAdjust)
                         NativeMethods.DragWindow(Handle);
                 }
             }
@@ -346,6 +361,7 @@ namespace ScreenSaver
         {
             btnClose.Visible = visibility;
             btnSettings.Visible = visibility;
+            btnAdjust.Visible = visibility && player.Type == PlayerType.LibVlc;
         }
 
 

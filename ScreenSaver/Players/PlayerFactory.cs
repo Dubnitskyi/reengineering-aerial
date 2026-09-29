@@ -19,7 +19,7 @@ namespace Aerial.Players
             {
                 try
                 {
-                    return new LibVlcPlayer();
+                    return new LibVlcPlayer { Adjustments = new RegSettings().Adjustments };
                 }
                 catch (Exception ex)
                 {

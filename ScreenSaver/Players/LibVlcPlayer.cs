@@ -20,6 +20,7 @@ namespace Aerial.Players
         private Media media;
         private string currentUrl;
         private string pendingUrl;
+        private VideoAdjustments adjustments = new VideoAdjustments();
 
         public event EventHandler MediaEnded;
         public event EventHandler<string> MediaError;
@@ -51,6 +52,7 @@ namespace Aerial.Players
 
             mediaPlayer.EndReached += MediaPlayer_EndReached;
             mediaPlayer.EncounteredError += MediaPlayer_EncounteredError;
+            mediaPlayer.Playing += MediaPlayer_Playing;
         }
 
         public Control View => view;
@@ -81,6 +83,37 @@ namespace Aerial.Players
             media = CreateMedia(url);
             mediaPlayer.Play(media);
             previous?.Dispose();
+        }
+
+        /// <summary>
+        /// Brightness, contrast, etc. Applied immediately and to every next video.
+        /// </summary>
+        public VideoAdjustments Adjustments
+        {
+            get { return adjustments; }
+            set
+            {
+                adjustments = value ?? new VideoAdjustments();
+                ApplyAdjustments();
+            }
+        }
+
+        public void ApplyAdjustments()
+        {
+            if (adjustments.IsDefault)
+            {
+                mediaPlayer.SetAdjustInt(VideoAdjustOption.Enable, 0);
+            }
+            else
+            {
+                mediaPlayer.SetAdjustInt(VideoAdjustOption.Enable, 1);
+                mediaPlayer.SetAdjustFloat(VideoAdjustOption.Brightness, adjustments.Brightness);
+                mediaPlayer.SetAdjustFloat(VideoAdjustOption.Contrast, adjustments.Contrast);
+                mediaPlayer.SetAdjustFloat(VideoAdjustOption.Saturation, adjustments.Saturation);
+                mediaPlayer.SetAdjustFloat(VideoAdjustOption.Hue, adjustments.Hue);
+                mediaPlayer.SetAdjustFloat(VideoAdjustOption.Gamma, adjustments.Gamma);
+            }
+            mediaPlayer.SetRate(adjustments.Speed);
         }
 
         public void Stop()
@@ -134,6 +167,12 @@ namespace Aerial.Players
             view.BeginInvoke(action);
         }
 
+        private void MediaPlayer_Playing(object sender, EventArgs e)
+        {
+            // a new video output is created for every file, the filter values must be set again
+            RunOnUiThread(ApplyAdjustments);
+        }
+
         private void MediaPlayer_EndReached(object sender, EventArgs e)
         {
             RunOnUiThread(() => MediaEnded?.Invoke(this, EventArgs.Empty));
@@ -149,6 +188,7 @@ namespace Aerial.Players
         {
             mediaPlayer.EndReached -= MediaPlayer_EndReached;
             mediaPlayer.EncounteredError -= MediaPlayer_EncounteredError;
+            mediaPlayer.Playing -= MediaPlayer_Playing;
 
             if (mediaPlayer.IsPlaying)
                 mediaPlayer.Stop();

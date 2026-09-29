@@ -22,6 +22,7 @@ namespace Aerial
         public PlayerType PlayerType = PlayerType.LibVlc;
         public bool UseLocalFolder = false;
         public string LocalFolder = "";
+        public VideoAdjustments Adjustments = new VideoAdjustments();
 
 #pragma warning disable CS0618 // Type or member is obsolete
         public RegSettings()
@@ -48,6 +49,7 @@ namespace Aerial
 
                 UseLocalFolder = bool.Parse(key.GetValue(nameof(UseLocalFolder)) as string ?? "False");
                 LocalFolder = key.GetValue(nameof(LocalFolder)) as string ?? "";
+                Adjustments = VideoAdjustments.Parse(key.GetValue(nameof(Adjustments)) as string);
 
                 if (!Enum.TryParse(key.GetValue(nameof(PlayerType)) as string, out PlayerType))
                     PlayerType = PlayerType.LibVlc;
@@ -70,6 +72,7 @@ namespace Aerial
             key.SetValue(nameof(PlayerType), PlayerType);
             key.SetValue(nameof(UseLocalFolder), UseLocalFolder);
             key.SetValue(nameof(LocalFolder), LocalFolder);
+            key.SetValue(nameof(Adjustments), Adjustments.ToString());
 
             // delete old keys
             key.DeleteValue(nameof(DifferentMoviesOnDual), throwOnMissingValue: false);
