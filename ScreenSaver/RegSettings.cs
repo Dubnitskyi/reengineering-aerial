@@ -1,4 +1,5 @@
-﻿using Microsoft.Win32;
+﻿using Aerial.Players;
+using Microsoft.Win32;
 using System;
 using System.ComponentModel;
 using System.IO;
@@ -18,6 +19,7 @@ namespace Aerial
         public string CacheLocation = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Aerial");
         public string ChosenMovies = "";
         public string JsonURL = AerialGlobalVars.appleVideosURI;
+        public PlayerType PlayerType = PlayerType.LibVlc;
 
 #pragma warning disable CS0618 // Type or member is obsolete
         public RegSettings()
@@ -41,6 +43,9 @@ namespace Aerial
                 CacheLocation = key.GetValue(nameof(CacheLocation)) as string;
                 ChosenMovies = (key.GetValue(nameof(ChosenMovies)) as string ?? "");
                 JsonURL = key.GetValue(nameof(JsonURL)) as string;
+
+                if (!Enum.TryParse(key.GetValue(nameof(PlayerType)) as string, out PlayerType))
+                    PlayerType = PlayerType.LibVlc;
             }
         }
 
@@ -57,6 +62,7 @@ namespace Aerial
             key.SetValue(nameof(CacheLocation), CacheLocation);
             key.SetValue(nameof(ChosenMovies), ChosenMovies);
             key.SetValue(nameof(JsonURL), JsonURL);
+            key.SetValue(nameof(PlayerType), PlayerType);
 
             // delete old keys
             key.DeleteValue(nameof(DifferentMoviesOnDual), throwOnMissingValue: false);

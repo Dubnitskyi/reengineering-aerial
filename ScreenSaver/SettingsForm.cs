@@ -3,6 +3,7 @@ using System.Windows.Forms;
 using System.IO;
 using System.Linq;
 using Aerial;
+using Aerial.Players;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -37,6 +38,7 @@ namespace ScreenSaver
             //chkMultiscreenDisabled.Checked = settings.MultiscreenDisabled;
             chkCacheVideos.Checked = settings.CacheVideos;
             cbMultiScreenMode.DataBindEnum(settings.MultiMonitorMode);
+            cbPlayerType.DataBindEnum(settings.PlayerType);
 
             if (settings.CacheLocation == null || settings.CacheLocation == "")
             {
@@ -154,6 +156,7 @@ namespace ScreenSaver
         {
             var settings = new RegSettings();
             settings.MultiMonitorMode = (RegSettings.MultiMonitorModeEnum)cbMultiScreenMode.SelectedValue;
+            settings.PlayerType = (PlayerType)cbPlayerType.SelectedValue;
             settings.UseTimeOfDay = chkUseTimeOfDay.Checked;
             settings.CacheVideos = chkCacheVideos.Checked;
 
