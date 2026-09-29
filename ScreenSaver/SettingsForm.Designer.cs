@@ -62,6 +62,9 @@ namespace ScreenSaver
             this.videoSourceResetButton = new System.Windows.Forms.Button();
             this.lbl_VideoSourceURL = new System.Windows.Forms.Label();
             this.changeVideoSourceText = new System.Windows.Forms.TextBox();
+            this.chkLocalFolder = new System.Windows.Forms.CheckBox();
+            this.txtLocalFolder = new System.Windows.Forms.TextBox();
+            this.btnBrowseLocalFolder = new System.Windows.Forms.Button();
             this.tabAbout = new System.Windows.Forms.TabPage();
             this.timerDiskUpdate = new System.Windows.Forms.Timer(this.components);
             this.tabs.SuspendLayout();
@@ -372,6 +375,9 @@ namespace ScreenSaver
             // 
             // tabSource
             // 
+            this.tabSource.Controls.Add(this.btnBrowseLocalFolder);
+            this.tabSource.Controls.Add(this.txtLocalFolder);
+            this.tabSource.Controls.Add(this.chkLocalFolder);
             this.tabSource.Controls.Add(this.SetToFourK_btn);
             this.tabSource.Controls.Add(this.videoSourceResetButton);
             this.tabSource.Controls.Add(this.lbl_VideoSourceURL);
@@ -424,6 +430,37 @@ namespace ScreenSaver
             this.changeVideoSourceText.Name = "changeVideoSourceText";
             this.changeVideoSourceText.Size = new System.Drawing.Size(378, 20);
             this.changeVideoSourceText.TabIndex = 23;
+            // 
+            // chkLocalFolder
+            // 
+            this.chkLocalFolder.AutoSize = true;
+            this.chkLocalFolder.Location = new System.Drawing.Point(11, 105);
+            this.chkLocalFolder.Name = "chkLocalFolder";
+            this.chkLocalFolder.Size = new System.Drawing.Size(177, 17);
+            this.chkLocalFolder.TabIndex = 27;
+            this.chkLocalFolder.Text = "Play videos from a local folder";
+            this.chkLocalFolder.UseVisualStyleBackColor = true;
+            this.chkLocalFolder.CheckedChanged += new System.EventHandler(this.chkLocalFolder_CheckedChanged);
+            // 
+            // txtLocalFolder
+            // 
+            this.txtLocalFolder.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtLocalFolder.Location = new System.Drawing.Point(11, 128);
+            this.txtLocalFolder.Name = "txtLocalFolder";
+            this.txtLocalFolder.Size = new System.Drawing.Size(297, 20);
+            this.txtLocalFolder.TabIndex = 28;
+            // 
+            // btnBrowseLocalFolder
+            // 
+            this.btnBrowseLocalFolder.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnBrowseLocalFolder.Location = new System.Drawing.Point(313, 127);
+            this.btnBrowseLocalFolder.Name = "btnBrowseLocalFolder";
+            this.btnBrowseLocalFolder.Size = new System.Drawing.Size(75, 22);
+            this.btnBrowseLocalFolder.TabIndex = 29;
+            this.btnBrowseLocalFolder.Text = "Browse...";
+            this.btnBrowseLocalFolder.UseVisualStyleBackColor = true;
+            this.btnBrowseLocalFolder.Click += new System.EventHandler(this.btnBrowseLocalFolder_Click);
             // 
             // tabAbout
             // 
@@ -498,6 +535,9 @@ namespace ScreenSaver
         private System.Windows.Forms.Button btnPurgeCache;
         private System.Windows.Forms.Label lblCacheSize;
         private System.Windows.Forms.Panel playerHost;
+        private System.Windows.Forms.CheckBox chkLocalFolder;
+        private System.Windows.Forms.TextBox txtLocalFolder;
+        private System.Windows.Forms.Button btnBrowseLocalFolder;
         private System.Windows.Forms.PictureBox pictureBox1;
         private System.Windows.Forms.CheckBox cbLivePreview;
         private System.Windows.Forms.Timer timerDiskUpdate;

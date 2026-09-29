@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Aerial
@@ -15,6 +16,12 @@ namespace Aerial
         static IdAsset[] cachedEntities;
         static List<Asset> cachedPlaylist;
         static readonly JsonSerializerOptions jsonOptions = new JsonSerializerOptions { IncludeFields = true };
+        static readonly string[] localVideoExtensions = { ".mp4", ".mov", ".m4v", ".mkv", ".webm", ".avi", ".wmv" };
+
+        /// <summary>
+        /// True when the video list could not be downloaded and the cached copy is used instead.
+        /// </summary>
+        public static bool IsOffline { get; private set; }
 
         public static List<Asset> GetMovies()
         {
@@ -49,6 +56,12 @@ namespace Aerial
                 links = urls.SelectMany(s => s.assets).ToList();
             }
 
+            // without internet only already downloaded or local videos can be played
+            if (IsOffline)
+            {
+                links = links.Where(t => Caching.IsHit(t.url) || !Caching.IsRemote(t.url)).ToList();
+            }
+
             if (settings.MultiMonitorMode == RegSettings.MultiMonitorModeEnum.DifferentVideos)
                 return links;
 
@@ -63,26 +76,35 @@ namespace Aerial
             if (cachedEntities != null) return cachedEntities;
 
             var settings = new RegSettings();
+            if (settings.UseLocalFolder)
+            {
+                cachedEntities = GetLocalFolderEntries(settings.LocalFolder);
+                return cachedEntities;
+            }
+
             var aerialUrl = settings.JsonURL;
+            if (string.IsNullOrWhiteSpace(aerialUrl))
+                aerialUrl = AerialGlobalVars.appleVideosURI;
 #if OFFLINE
             aerialUrl = "http://BOGUS/entries.json";
 #endif
 
-            // update anyway
-            Caching.StartDelayedCache(aerialUrl);
-
-            string entries = "";
+            string entries = null;
             try
             {
+                entries = DownloadString(aerialUrl);
+                IsOffline = false;
+                Caching.SaveText(aerialUrl, entries);
+            }
+            catch (Exception e) when (e is HttpRequestException || e is IOException || e is OperationCanceledException || e is UriFormatException)
+            {
+                // no connection, fall back to the last downloaded list
+                IsOffline = true;
                 if (Caching.IsHit(aerialUrl))
                     entries = File.ReadAllText(Caching.Get(aerialUrl));
-                else
-                    entries = DownloadString(aerialUrl);
             }
-            catch (Exception e) when (e is HttpRequestException || e is IOException || e is TaskCanceledException || e is UriFormatException)
-            {
-                return null;
-            }
+
+            if (entries == null) return null;
 
             try
             {
@@ -104,7 +126,33 @@ namespace Aerial
             if (uri.IsFile)
                 return File.ReadAllText(uri.LocalPath);
 
-            return Task.Run(() => Caching.Http.GetStringAsync(uri)).GetAwaiter().GetResult();
+            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
+            {
+                return Task.Run(() => Caching.Http.GetStringAsync(uri, cts.Token)).GetAwaiter().GetResult();
+            }
+        }
+
+        private static IdAsset[] GetLocalFolderEntries(string folder)
+        {
+            if (string.IsNullOrWhiteSpace(folder) || !Directory.Exists(folder))
+                return null;
+
+            var assets = Directory.EnumerateFiles(folder)
+                .Where(f => localVideoExtensions.Contains(Path.GetExtension(f).ToLowerInvariant()))
+                .OrderBy(f => f)
+                .Select(f => new Asset
+                {
+                    url = f,
+                    accessibilityLabel = Path.GetFileNameWithoutExtension(f),
+                    type = "video",
+                    id = Path.GetFileName(f),
+                    timeOfDay = "day"
+                })
+                .ToArray();
+
+            if (assets.Length == 0) return null;
+
+            return new[] { new IdAsset { id = "local", assets = assets } };
         }
 
         /**

@@ -388,8 +388,12 @@ namespace ScreenSaver
                 if (Movies == null || Movies.Count == 0)
                 {
                     showVideo = false;
-                    MessageBox.Show("Error finding the video locations.  Please confirm that the video source " +
-                        "is a valid JSON document and can be reached.  Resart after fixing the video source");
+                    if (AerialContext.IsOffline)
+                        MessageBox.Show("No internet connection and no downloaded videos to play. " +
+                            "Enable \"Cache videos while playing\" or choose a local folder in Settings > Video Source.");
+                    else
+                        MessageBox.Show("Error finding the video locations.  Please confirm that the video source " +
+                            "is a valid JSON document and can be reached.  Resart after fixing the video source");
 
                     return;
                 }

@@ -20,6 +20,8 @@ namespace Aerial
         public string ChosenMovies = "";
         public string JsonURL = AerialGlobalVars.appleVideosURI;
         public PlayerType PlayerType = PlayerType.LibVlc;
+        public bool UseLocalFolder = false;
+        public string LocalFolder = "";
 
 #pragma warning disable CS0618 // Type or member is obsolete
         public RegSettings()
@@ -44,6 +46,9 @@ namespace Aerial
                 ChosenMovies = (key.GetValue(nameof(ChosenMovies)) as string ?? "");
                 JsonURL = key.GetValue(nameof(JsonURL)) as string;
 
+                UseLocalFolder = bool.Parse(key.GetValue(nameof(UseLocalFolder)) as string ?? "False");
+                LocalFolder = key.GetValue(nameof(LocalFolder)) as string ?? "";
+
                 if (!Enum.TryParse(key.GetValue(nameof(PlayerType)) as string, out PlayerType))
                     PlayerType = PlayerType.LibVlc;
             }
@@ -63,6 +68,8 @@ namespace Aerial
             key.SetValue(nameof(ChosenMovies), ChosenMovies);
             key.SetValue(nameof(JsonURL), JsonURL);
             key.SetValue(nameof(PlayerType), PlayerType);
+            key.SetValue(nameof(UseLocalFolder), UseLocalFolder);
+            key.SetValue(nameof(LocalFolder), LocalFolder);
 
             // delete old keys
             key.DeleteValue(nameof(DifferentMoviesOnDual), throwOnMissingValue: false);

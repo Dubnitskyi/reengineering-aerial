@@ -62,6 +62,10 @@ namespace ScreenSaver
             
             changeCacheLocationButton.Enabled = settings.CacheVideos;
 
+            chkLocalFolder.Checked = settings.UseLocalFolder;
+            txtLocalFolder.Text = settings.LocalFolder;
+            UpdateLocalFolderControls();
+
             ShowSpace();
 
             InitPlayer();
@@ -164,6 +168,8 @@ namespace ScreenSaver
             string oldCacheDirectory = settings.CacheLocation;
             settings.CacheLocation = txtCacheFolderPath.Text;
             settings.JsonURL = changeVideoSourceText.Text;
+            settings.UseLocalFolder = chkLocalFolder.Checked;
+            settings.LocalFolder = txtLocalFolder.Text;
 
             settings.ChosenMovies = tvChosen.ConcatChosenEntities();
 
@@ -198,6 +204,29 @@ namespace ScreenSaver
         private void chkCacheVideos_CheckedChanged(object sender, EventArgs e)
         {
             changeCacheLocationButton.Enabled = chkCacheVideos.Checked;
+        }
+
+        private void chkLocalFolder_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateLocalFolderControls();
+        }
+
+        private void UpdateLocalFolderControls()
+        {
+            txtLocalFolder.Enabled = chkLocalFolder.Checked;
+            btnBrowseLocalFolder.Enabled = chkLocalFolder.Checked;
+            changeVideoSourceText.Enabled = !chkLocalFolder.Checked;
+            videoSourceResetButton.Enabled = !chkLocalFolder.Checked;
+            SetToFourK_btn.Enabled = !chkLocalFolder.Checked;
+        }
+
+        private void btnBrowseLocalFolder_Click(object sender, EventArgs e)
+        {
+            if (Directory.Exists(txtLocalFolder.Text))
+                folderBrowserDialog.SelectedPath = txtLocalFolder.Text;
+
+            if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
+                txtLocalFolder.Text = folderBrowserDialog.SelectedPath;
         }
 
         private void SettingsForm_Load(object sender, EventArgs e)

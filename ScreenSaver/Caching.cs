@@ -44,6 +44,7 @@ namespace Aerial
 
         internal static bool IsHit(string url)
         {
+            if (!IsRemote(url)) return false;
             string filename = Path.GetFileName(url);
             return File.Exists(Path.Combine(CacheFolder, filename));
         }
@@ -112,10 +113,26 @@ namespace Aerial
             }
         }
 
-        private static bool IsRemote(string url)
+        internal static bool IsRemote(string url)
         {
             return url != null && (url.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
                 || url.StartsWith("https://", StringComparison.OrdinalIgnoreCase));
+        }
+
+        /// <summary>
+        /// Stores a downloaded text document (video list) so it's available offline.
+        /// </summary>
+        internal static void SaveText(string url, string text)
+        {
+            if (!IsRemote(url)) return;
+            try
+            {
+                File.WriteAllText(Path.Combine(CacheFolder, Path.GetFileName(url)), text);
+            }
+            catch (IOException ex)
+            {
+                Trace.WriteLine("Error saving " + url + ": " + ex.Message);
+            }
         }
 
         private static HttpClient CreateHttpClient()
