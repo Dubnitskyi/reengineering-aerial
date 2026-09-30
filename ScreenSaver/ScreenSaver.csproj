@@ -53,4 +53,8 @@
     <Copy SourceFiles="$(TargetDir)$(TargetName).exe" DestinationFiles="$(TargetDir)$(TargetName).scr" />
   </Target>
 
+  <Target Name="CopyScreenSaverPublish" AfterTargets="Publish">
+    <Copy SourceFiles="$(PublishDir)$(TargetName).exe" DestinationFiles="$(PublishDir)$(TargetName).scr" />
+  </Target>
+
 </Project>

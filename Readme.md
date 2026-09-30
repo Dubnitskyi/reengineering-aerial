@@ -16,8 +16,13 @@
 </a>
 </p>
 
-## 🚨 This project is no longer supported 🚨
-Use [OrangeJedi/Aerial](https://github.com/OrangeJedi/Aerial) as a replacement. It is a re-write of Aerial that has updated videos and additional features.
+## About this fork
+The original project is no longer supported. This fork is a reengineering of Aerial for current Windows versions:
+
+* migrated from .NET Framework 4.5.2 to **.NET 10** (SDK-style project, `System.Text.Json`, `HttpClient`);
+* video playback moved behind the `IVideoPlayer` interface with two engines: **LibVLC** (default) and the legacy **Windows Media Player**;
+* works offline from the cached video list or from a local folder with videos;
+* live picture adjustments (brightness, contrast, saturation, hue, gamma, speed) for the LibVLC player.
 
 ## Aerial - Apple TV Aerial Views Screen Saver for Windows 7, 8, 10+
 Aerial is a Windows screen saver based on the new Apple TV screen saver that displays the aerial movies Apple shot over New York, San Francisco, Hawaii, China, etc.
@@ -75,11 +80,34 @@ To uninstall, delete the downloaded `.scr` file.
 ## Features
 * **Auto Load Latest Aerials:** Aerials are loaded directly from Apple, so you're never out of date.
 * **Play Different Aerial On Each Display:** If you've got multiple monitors, this setting loads a different aerial for each of your displays.
+* **Choice of video player:** `Preferences > Video player`. LibVLC plays almost any format (H.264, HEVC, AV1, MKV, WebM) with hardware decoding and switches videos without a black screen. Windows Media Player is kept for compatibility.
+* **Offline mode:** the last downloaded video list and cached videos are used when there is no internet connection.
+* **Local folder:** `Video Source > Play videos from a local folder` plays your own video files, no JSON needed.
+* **Video adjustments:** in window mode press the ◐ button to change brightness, contrast, saturation, hue, gamma and playback speed (LibVLC only).
 
 <p align="center"><img align="center" alt="windows aerial screen saver settings" src="imgs/settings.png" /></p>
 
 ## Compatibility
-Aerial is written in C# for [.Net Framework v4.6](https://www.microsoft.com/en-us/download/details.aspx?id=48130).
+Aerial is written in C# for [.NET 10](https://dotnet.microsoft.com/download/dotnet/10.0) (Windows Forms) and uses [LibVLCSharp](https://github.com/videolan/libvlcsharp) for playback. VLC doesn't have to be installed, the native libraries come with the NuGet package.
+
+## Building from source
+
+Requires the .NET 10 SDK.
+
+```
+dotnet build ScreenSaver.sln
+dotnet run --project ScreenSaver
+```
+
+Release build of the screen saver:
+
+```
+dotnet publish ScreenSaver -c Release -r win-x64 --self-contained false -o publish
+```
+
+The `publish` folder contains `Aerial.scr`, right-click it and choose Install. Keep the `libvlc` folder next to it.
+
+Command line arguments: `/s` - full screen, `/c` - settings, `/p <HWND>` - preview, `/w` - window mode.
 
 ## FAQ
 
@@ -89,11 +117,11 @@ Please [install Microsoft's .Net Framework 4.6](https://support.microsoft.com/en
 
 > The app freezes or returns to desktop?
 
-Try to install `Windows Media Player` via `Turn Windows features on or off` in the control panel.
+Switch the player to LibVLC in `Preferences > Video player`. If you use the Windows Media Player engine, install `Windows Media Player Legacy` via `Optional features` in Windows settings.
 
 > Blank black screen on screen saver preview?
 
-The application needs an internet connection to work.
+The first start needs an internet connection to download the video list. After that cached videos are played offline, or use a local folder.
 
 > BitBlocker / McAfee / execution blocking the download?
 
@@ -126,6 +154,7 @@ I appreciate all pull requests. Caching hasn't been added yet.
 
 - October 27th, 2015 - 0.1: First release.
 - November 5th, 2015 - 0.2: Multi-screenoptions and scaling:
+- September 2026 - 7.0: .NET 10, LibVLC player, offline mode, local folder source, video adjustments.
 
 <p align="center"><img align="center" alt="multiscreen aerial screensaver" src="imgs/multiscreen.gif" /></p>
 
